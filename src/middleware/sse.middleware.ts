@@ -1,6 +1,6 @@
 import { IRequest, IResponse, NextFunction } from "express";
-import EventService from "../services/sse.service.js";
 import { GameEvents } from "../types/sse.js";
+import { formatSSE } from "../utils/formatSSE.js";
 
 export function SSEHandler(req: IRequest, res: IResponse, next: NextFunction) {
 	// Establish SSE
@@ -14,7 +14,7 @@ export function SSEHandler(req: IRequest, res: IResponse, next: NextFunction) {
 
 	// Ping interval to prevent browser error because no data received
 	let pingInterval = setInterval(() => {
-		res.write(EventService.format(GameEvents.Ping));
+		res.write(formatSSE(GameEvents.Ping));
 	}, 5 * 1000);
 
 	// Remove listener and end ping interval

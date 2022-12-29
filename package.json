@@ -33,6 +33,7 @@
 		"ioredis": "^5.2.4",
 		"jsonwebtoken": "^9.0.0",
 		"mongodb": "^4.13.0",
-		"node-cleanup": "^2.1.2"
+		"node-cleanup": "^2.1.2",
+		"zipson": "^0.2.12"
 	}
 }

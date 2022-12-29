@@ -1,42 +1,64 @@
 import { Controller, Get, Middleware } from "@overnightjs/core";
 import { IRequest, IResponse } from "express";
 import { Post } from "@overnightjs/core";
-import { config } from "../services/config.service.js";
 import { SSEHandler } from "../middleware/sse.middleware.js";
-import EventService from "../services/sse.service.js";
-import authenticate from "../middleware/auth.middleware.js";
-import { GameEvents } from "../types/sse.js";
+import EventService from "../services/event.service.js";
+import { GameEvents, SSECallback } from "../types/sse.js";
 import { StatusCode } from "../types/httpStatusCodes.js";
+import validate from "../middleware/validation.middleware.js";
+import { ChallengePlayer, JoinMatchmaking } from "../models/request/matchmaking.request.js";
+import { formatSSE } from "../utils/formatSSE.js";
+import * as MatchmakingService from "../services/matchmaking.service.js";
 
 @Controller("matchmaking")
 export default class DefaultController {
 	@Post("queue")
-	public joinMatchmakingQueue(req: IRequest, res: IResponse) {
-
-	}
-
-	@Post("challenge")
-	public async challengeAnotherPlayer(req: IRequest<{}>, res: IResponse<string[]>) {
-		await EventService.send({
-			from: "moin",
-			to: "test",
-			event: GameEvents.MatchFound,
-			data: { test: true }
-		});
+	//@Middleware(authenticate)
+	@Middleware(validate(JoinMatchmaking))
+	public joinMatchmakingQueue(req: IRequest<JoinMatchmaking>, res: IResponse) {
+		MatchmakingService.join(req.user!.id, req.body.gamemode);
 		res.status(StatusCode.OK).end();
 	}
+
+	@Post("cancel")
+	//@Middleware(authenticate)
+	@Middleware(validate(JoinMatchmaking))
+	public leaveMatchmakingQueue(req: IRequest<JoinMatchmaking>, res: IResponse) {
+		MatchmakingService.leave(req.user!.id, req.body.gamemode);
+		res.status(StatusCode.OK).end();
+	}
+
+	/*@Post("challenge")
+	//@Middleware(authenticate)
+	@Middleware(validate(ChallengePlayer))
+	public async challengeAnotherPlayer(req: IRequest<ChallengePlayer>, res: IResponse<string[]>) {
+		await EventService.send({
+			from: req.user!.id,
+			to: req.body.playerId,
+			event: GameEvents.Challenged
+		});
+		res.status(StatusCode.OK).end();
+	}*/
 
 	@Get("events")
 	//@Middleware(authenticate)
 	@Middleware(SSEHandler)
 	public handleQueueEvents(req: IRequest, res: IResponse) {
-
-		const stop = EventService.recieve(GameEvents.MatchFound, "test", (data) => {
-			console.log(data);
+		const handler: SSECallback = (data) => {
+			res.write(formatSSE(data.event, {
+				
+			}));
+		}
+		
+		const stop = EventService.recieve({
+			events: [GameEvents.MatchFound, GameEvents.Challenged],
+			identifier: req.user!.id,
+			handler
 		});
 
 		req.on("close", () => {
 			stop();
+			MatchmakingService.leaveAll(req.user!.id)
 		});
 	}
 }

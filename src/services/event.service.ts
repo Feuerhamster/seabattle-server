@@ -1,6 +1,7 @@
-import { SSECallback, GameEvents, IEventMessage } from "../types/sse";
+import { GameEvents, IEventMessage, IReceiverOptions } from "../types/sse";
 import Redis from "ioredis";
 import { config } from "./config.service.js";
+import { stringify, parse } from "zipson";
 
 const pub = new Redis(config.REDIS_URI);
 const sub = new Redis(config.REDIS_URI);
@@ -21,14 +22,14 @@ sub.psubscribe(pubsubkey + "*");
  * @param handler Function that get executed on recieved events
  * @returns Function to stop recieving
  */
-function recieve(event: GameEvents, identifier: string, handler: SSECallback): () => void {
+function recieve(options: IReceiverOptions): () => void {
 	function internalHandler (pattern: string, channel: string, message: string) {
-		const data: IEventMessage = JSON.parse(message);
+		const data: IEventMessage = parse(message);
 
-		if (event !== data.event) return;
-		if (identifier !== data.to) return;
+		if (!options.events.includes(data.event)) return;
+		if (options.identifier !== data.to) return;
 
-		handler(data);
+		options.handler(data);
 	}
 
 	sub.on("pmessage", internalHandler);
@@ -47,31 +48,11 @@ function recieve(event: GameEvents, identifier: string, handler: SSECallback): (
  * @returns succes status
  */
 async function send(message: IEventMessage): Promise<boolean> {
-	await pub.publish(pubsubkey + message.event, JSON.stringify(message));
+	await pub.publish(pubsubkey + message.event, stringify(message));
 
 	return true;
 }
 
-/**
- * util to format sse messages
- * @param event event name
- * @param data event data
- * @param id optional event id
- * @returns formatted string
- */
-function format(event: GameEvents, data?: any, id?: number) {
-	let str = "";
-
-	if (id) str += `id: ${id}\n`;
-
-	str += `event: ${event}\n`;
-	str += `data: ${JSON.stringify(data)}`;
-
-	str += `\n\n`;
-
-	return str;
-}
-
 export default {
-	send, recieve, format
+	send, recieve
 }
