@@ -8,7 +8,7 @@ export enum GameEvents {
 
 export interface IEventMessage {
 	to: string;
-	from: string;
+	from: string | null;
 	event: GameEvents;
 	data?: any;
 }

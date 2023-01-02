@@ -6,7 +6,7 @@ import EventService from "../services/event.service.js";
 import { GameEvents, SSECallback } from "../types/sse.js";
 import { StatusCode } from "../types/httpStatusCodes.js";
 import validate from "../middleware/validation.middleware.js";
-import { ChallengePlayer, JoinMatchmaking } from "../models/request/matchmaking.request.js";
+import { JoinMatchmaking } from "../models/request/matchmaking.request.js";
 import { formatSSE } from "../utils/formatSSE.js";
 import * as MatchmakingService from "../services/matchmaking.service.js";
 
@@ -17,6 +17,7 @@ export default class DefaultController {
 	@Middleware(validate(JoinMatchmaking))
 	public joinMatchmakingQueue(req: IRequest<JoinMatchmaking>, res: IResponse) {
 		MatchmakingService.join(req.user!.id, req.body.gamemode);
+		MatchmakingService.matchmaking(req.body.gamemode);
 		res.status(StatusCode.OK).end();
 	}
 
@@ -58,7 +59,7 @@ export default class DefaultController {
 
 		req.on("close", () => {
 			stop();
-			MatchmakingService.leaveAll(req.user!.id)
+			MatchmakingService.removeFromQueue(req.user!.id);
 		});
 	}
 }
