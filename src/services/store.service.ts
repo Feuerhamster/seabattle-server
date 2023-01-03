@@ -6,72 +6,99 @@ const redis = new Redis(config.REDIS_URI);
 
 const namespace = "seabattle";
 
-// Key Value Cache
-
-export async function setValue(key: string[], value: object) {
-	await redis.set(toPath(key), Buffer.from(encode(value)));
-}
-
-export async function setValueString(key: string[], value: string) {
-	await redis.set(toPath(key), value);
-}
-
-export async function getValue<T extends object>(key: string[]) {
-	const data = await redis.getBuffer(toPath(key));
-
-	if (!data) return null;
-
-	return decode(data) as T;
-}
-
-export async function getValueString(key: string[]) {
-	const data = await redis.get(toPath(key));
-
-	if (!data) return null;
-
-	return data as string;
-}
-
-export async function hasKey(key: string[]) {
-	return await redis.exists(toPath(key));
-}
-
-export async function removeKey(key: string[]) {
-	await redis.del(toPath(key));
-}
 
 // Queues (aka. redis lists)
 
-/**
- * Add a value to the end of the queue
- * @param key name of the queue
- * @param value value
- */
-export async function pushQueue(key: string[], value: string) {
-	await redis.rpush(toPath(key), value);
+class QueueService {
+	private key: string;
+
+	constructor(keyParts: string[]) {
+		this.key = toPath(keyParts);
+	}
+
+	/**
+	 * Add a value to the end of the queue
+	 * @param key name of the queue
+	 * @param value value
+	 */
+	async push(value: string) {
+		await redis.rpush(this.key, value);
+	}
+
+
+	/**
+	 * Removes and returns the first element of the queue
+	 * @param key name of the queue
+	 * @returns the element
+	 */
+	async shift(count: number) {
+		return await redis.lpop(this.key, count);
+	}
+
+	/**
+	 * Returns the length of the queue
+	 * @param key name of the queue
+	 * @returns length
+	 */
+	async length() {
+		return await redis.llen(this.key)
+	}
+
+	async remove(value: string) {
+		await redis.lrem(this.key, 0, value);
+	}
+
 }
 
+class KeyValueService {
+	private key: string;
 
-/**
- * Removes and returns the first element of the queue
- * @param key name of the queue
- * @returns the element
- */
-export async function shiftQueue(key: string[], count: number) {
-	return await redis.lpop(toPath(key), count);
+	constructor(keyParts: string[]) {
+		this.key = toPath(keyParts);
+	}
+
+	async setValueObject(value: object) {
+		await redis.set(this.key, Buffer.from(encode(value)));
+	}
+	
+	async setValueString(value: string) {
+		await redis.set(this.key, value);
+	}
+
+	async getValueObject<T extends object>() {
+		const data = await redis.getBuffer(this.key);
+	
+		if (!data) return null;
+	
+		return decode(data) as T;
+	}
+	
+	async getValueString() {
+		const data = await redis.get(this.key);
+	
+		if (!data) return null;
+	
+		return data as string;
+	}
+	
+	async exists() {
+		return await redis.exists(this.key);
+	}
+	
+	async delete() {
+		await redis.del(this.key);
+	}
+
 }
 
-/**
- * Returns the length of the queue
- * @param key name of the queue
- * @returns length
- */
-export async function lengthQueue(key: string[]) {
-	return await redis.llen(toPath(key))
-}
+export default class StoreService {
+	static key(...parts: string[]) {
+		return new KeyValueService(parts);
+	}
 
-export async function removeQueue(key: string[], value: string) {
-	await redis.lrem(toPath(key), 0, value);
+	static queue(...keyParts: string[]) {
+		return new QueueService(keyParts);
+	}
 }
 
 // Utils

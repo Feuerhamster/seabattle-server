@@ -1,6 +1,6 @@
 import { PublicPlayer } from "../models/response/player.response";
 import { getPlayerAccountById } from "./database.service";
-
+import { levelByTotal } from "./leveling.service";
 
 export async function getPlayer(id: string): Promise<PublicPlayer | null> {
 
@@ -13,7 +13,7 @@ export async function getPlayer(id: string): Promise<PublicPlayer | null> {
 		username: player.username,
 		discriminator: player.discriminator,
 		avatar: player.avatar,
-		level: 0
+		level: levelByTotal(player.xp)
 	};
 
 }

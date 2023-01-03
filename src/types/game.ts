@@ -54,6 +54,23 @@ export interface IMidRoundGameStateForPlayer {
 	playersTurn: number;
 }
 
+export interface IGameReport {
+	id: string;
+	playerId: string;
+	enemies: string[];
+	gamemode: GameModes;
+	winner: boolean;
+	shipCount: number;
+	shipsDestroyed: number;
+	shipsLost: number;
+	createdDate: Date;
+	startedDate: Date;
+	endedDate: Date;
+	totalTime: number;
+	playTime: number;
+	xpEarned: number;
+}
+
 export interface IGameMode {
 	forPlayers: number;
 	ships: { name: string; length: number }[];

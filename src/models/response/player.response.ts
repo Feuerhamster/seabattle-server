@@ -1,6 +1,6 @@
 import { IPlayerAccount } from "../database/playerAccount.model";
 
-export interface PublicPlayer {
+export interface IPublicPlayer {
 	id: string;
 	username: string;
 	discriminator: string;
