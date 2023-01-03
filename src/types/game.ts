@@ -7,6 +7,11 @@ export enum GamePhase {
 	End
 }
 
+export interface CoordinatePair {
+	x: number;
+	y: number;
+}
+
 export interface IGameState {
 	id: string;
 	gamemode: GameModes;
@@ -15,7 +20,7 @@ export interface IGameState {
 	startedDate?: Date;
 	endedDate?: Date;
 	playerStates: IGameStatePlayer[];
-	playersTurn: 0;
+	playersTurn: number;
 }
 
 export interface IGameStatePlayer {
@@ -52,7 +57,7 @@ export interface IMidRoundGameStateForPlayer {
 export interface IGameMode {
 	forPlayers: number;
 	ships: { name: string; length: number }[];
-	gridSize: { x: number, y: number };
+	gridSize: CoordinatePair;
 	compute: (state: IGameState, action: GameAction) => IGameState;
 	checkWinner: (state: IGameState) => number;
 }

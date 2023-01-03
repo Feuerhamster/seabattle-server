@@ -8,7 +8,7 @@ import * as DatabaseService from "../services/database.service.js";
 import { EOAuthProvider } from "../models/database/playerAccount.model.js";
 
 @Controller("auth")
-export default class DefaultController {
+export default class AuthController {
 	@Get("/")
 	public oauthUrls(req: IRequest, res: IResponse<string[]>) {
 		res.send([

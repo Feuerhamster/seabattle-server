@@ -1,68 +1,52 @@
 import { GameModes, getGamemode } from "../gamemodes";
-import { GamePhase, IGameState } from "../types/game";
-import * as StoreService from "./store.service";
-import uniqid from "uniqid";
+import * as Store from "./store.service";
 import eventService from "./event.service";
 import { GameEvents } from "../types/sse";
-
+import GameState from "../models/store/gamestate.model";
 
 export async function join(playerId: string, gamemode: GameModes) {
 	await Promise.all([
-		StoreService.pushQueue(["matchmaking", gamemode], playerId),
-		StoreService.setValueString(["player", playerId, "matchmaking", "gamemode"], gamemode)
+		Store.pushQueue(["matchmaking", gamemode], playerId),
+		Store.setValueString(["player", playerId, "matchmaking", "gamemode"], gamemode)
 	]);
 }
 
 export async function leave(playerId: string, gamemode: GameModes) {
 	await Promise.all([
-		StoreService.removeQueue(["matchmaking", gamemode], playerId),
-		StoreService.removeKey(["player", playerId, "matchmaking", "gamemode"])
+		Store.removeQueue(["matchmaking", gamemode], playerId),
+		Store.removeKey(["player", playerId, "matchmaking", "gamemode"])
 	]);
 }
 
 export async function removeFromQueue(playerId: string) {
-	const gamemode = await StoreService.getValueString(["player", playerId, "matchmaking", "gamemode"]);
+	const gamemode = await Store.getValueString(["player", playerId, "matchmaking", "gamemode"]);
 
 	if (!gamemode) return;
 
 	await Promise.all([
-		StoreService.removeQueue(["matchmaking", gamemode], playerId),
-		StoreService.removeKey(["player", playerId, "matchmaking", "gamemode"])
+		Store.removeQueue(["matchmaking", gamemode], playerId),
+		Store.removeKey(["player", playerId, "matchmaking", "gamemode"])
 	]);
 }
 
 export async function matchmaking(gamemode: GameModes) {
 	const game = getGamemode(gamemode);
 
-	const queueLength = await StoreService.lengthQueue(["matchmaking", gamemode]);
+	const queueLength = await Store.lengthQueue(["matchmaking", gamemode]);
 
 	if (queueLength < game.forPlayers) {
 		return;
 	}
 
-	const playerIds = await StoreService.shiftQueue(["matchmaking", gamemode], game.forPlayers);
+	const playerIds = await Store.shiftQueue(["matchmaking", gamemode], game.forPlayers);
 
 	if(!playerIds) return;
 
-	const grid: number[][] = new Array<number[]>(game.gridSize.y).fill(new Array<number>(game.gridSize.x).fill(0));
-
-	const state: IGameState = {
-		id: uniqid(),
-		gamemode,
-		phase: GamePhase.Preperation,
-		createdDate: new Date(),
-		playerStates: playerIds.map((playerId) => ({
-			playerId,
-			ships: [],
-			grid: grid
-		})),
-		playersTurn: 0
-	};
-
-	await StoreService.setValue(["games", state.id], state);
+	const state = new GameState(gamemode, playerIds, game.gridSize);
+	await state.save();
 
 	playerIds.forEach((playerId) => {
-		StoreService.removeKey(["player", playerId, "matchmaking", "gamemode"]);
+		Store.removeKey(["player", playerId, "matchmaking", "gamemode"]);
 
 		eventService.send({
 			to: playerId,

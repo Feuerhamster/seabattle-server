@@ -1,17 +1,17 @@
 import { Controller, Get, Middleware } from "@overnightjs/core";
 import { IRequest, IResponse } from "express";
 import { Post } from "@overnightjs/core";
-import { SSEHandler } from "../middleware/sse.middleware.js";
+import { SSEHandler } from "../middlewares/sse.middleware.js";
 import EventService from "../services/event.service.js";
 import { GameEvents, SSECallback } from "../types/sse.js";
 import { StatusCode } from "../types/httpStatusCodes.js";
-import validate from "../middleware/validation.middleware.js";
+import validate from "../middlewares/validation.middleware.js";
 import { JoinMatchmaking } from "../models/request/matchmaking.request.js";
-import { formatSSE } from "../utils/formatSSE.js";
+import { formatSSE } from "../utils/formatSSE.utils.js";
 import * as MatchmakingService from "../services/matchmaking.service.js";
 
 @Controller("matchmaking")
-export default class DefaultController {
+export default class MatchmakingController {
 	@Post("queue")
 	//@Middleware(authenticate)
 	@Middleware(validate(JoinMatchmaking))
@@ -46,19 +46,17 @@ export default class DefaultController {
 	@Middleware(SSEHandler)
 	public handleQueueEvents(req: IRequest, res: IResponse) {
 		const handler: SSECallback = (data) => {
-			res.write(formatSSE(data.event, {
-				
-			}));
+			res.write(formatSSE(data.event, data.data));
 		}
 		
-		const stop = EventService.recieve({
-			events: [GameEvents.MatchFound, GameEvents.Challenged],
+		const unsubscribe = EventService.recieve({
+			events: [GameEvents.MatchFound],
 			identifier: req.user!.id,
 			handler
 		});
 
 		req.on("close", () => {
-			stop();
+			unsubscribe();
 			MatchmakingService.removeFromQueue(req.user!.id);
 		});
 	}

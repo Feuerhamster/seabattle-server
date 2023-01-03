@@ -1,6 +1,6 @@
 import { IRequest, IResponse, NextFunction } from "express";
 import { GameEvents } from "../types/sse.js";
-import { formatSSE } from "../utils/formatSSE.js";
+import { formatSSE } from "../utils/formatSSE.utils.js";
 
 export function SSEHandler(req: IRequest, res: IResponse, next: NextFunction) {
 	// Establish SSE

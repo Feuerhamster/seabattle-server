@@ -4,7 +4,7 @@ import { Server as HttpServer } from "http";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-import { errorFunctionMiddleware } from "./middleware/errorFunction.middleware.js";
+import { errorFunctionMiddleware } from "./middlewares/errorFunction.middleware.js";
 export default class SeaBattleBackendServer extends Server {
 	private server!: HttpServer;
 	
