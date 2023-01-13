@@ -1,7 +1,7 @@
-import { GameEvents, IEventMessage, IReceiverOptions } from "../types/sse";
+import { IEventMessage, IReceiverOptions } from "../types/sse";
 import Redis from "ioredis";
 import { config } from "./config.service.js";
-import { stringify, parse } from "zipson";
+import { encode, decode } from "@msgpack/msgpack";
 
 const pub = new Redis(config.REDIS_URI);
 const sub = new Redis(config.REDIS_URI);
@@ -23,8 +23,8 @@ sub.psubscribe(pubsubkey + "*");
  * @returns Function to stop recieving
  */
 function recieve(options: IReceiverOptions): () => void {
-	function internalHandler (pattern: string, channel: string, message: string) {
-		const data: IEventMessage = parse(message);
+	function internalHandler (pattern: string, channel: string, message: Buffer) {
+		const data = decode(message) as IEventMessage;
 
 		if (!options.events.includes(data.event)) return;
 		if (options.identifier !== data.to) return;
@@ -48,7 +48,7 @@ function recieve(options: IReceiverOptions): () => void {
  * @returns succes status
  */
 async function send(message: IEventMessage): Promise<boolean> {
-	await pub.publish(pubsubkey + message.event, stringify(message));
+	await pub.publish(pubsubkey + message.event, Buffer.from(encode(message)));
 
 	return true;
 }

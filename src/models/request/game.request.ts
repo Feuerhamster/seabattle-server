@@ -1,4 +1,4 @@
-import { RequestBody } from "../request";
+import { RequestBody } from "../request.js";
 
 export interface ICoordinates {
 	x: number;

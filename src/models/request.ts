@@ -1,5 +1,3 @@
-import * as express from "express"
-
 /**
  * Base class for Request objects
  */

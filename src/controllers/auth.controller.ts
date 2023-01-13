@@ -44,12 +44,12 @@ export default class AuthController {
 			return res.error!("login_failed");
 		}
 
-		const token = OAuthService.createJWT(account._id);
+		const token = OAuthService.createJWT(account._id.toString());
 
 		const data: IAuthReponse = {
 			token,
 			user: {
-				id: account._id,
+				id: account._id.toString(),
 				username: user.username,
 				discriminator: user.discriminator,
 				avatar: OAuthService.getDiscordAvatarURL(user.id, user.avatar)

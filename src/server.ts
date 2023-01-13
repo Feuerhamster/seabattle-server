@@ -24,10 +24,12 @@ export default class SeaBattleBackendServer extends Server {
 		// Dynamic imports are required here to load these modules after the config has been loaded.
 		const AuthController = (await import("./controllers/auth.controller.js")).default;
 		const MatchmakingController = (await import("./controllers/matchmaking.controller.js")).default;
+		const PlayerController = (await import("./controllers/player.controller.js")).default;
 		
 		super.addControllers([
 			new AuthController(),
-			new MatchmakingController()
+			new MatchmakingController(),
+			new PlayerController()
 		]);
 	}
 	

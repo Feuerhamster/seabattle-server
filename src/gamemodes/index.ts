@@ -1,6 +1,6 @@
 import { IGameMode } from "../types/game";
 
-import ClassicGamemode from "./classic.gamemode";
+import ClassicGamemode from "./classic.gamemode.js";
 
 export enum GameModes {
 	Classic = "classic"

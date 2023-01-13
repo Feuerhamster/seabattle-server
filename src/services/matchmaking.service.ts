@@ -1,8 +1,8 @@
-import { GameModes, getGamemode } from "../gamemodes";
-import StoreService from "./store.service";
-import eventService from "./event.service";
-import { GameEvents } from "../types/sse";
-import GameState from "../models/store/gamestate.model";
+import { GameModes, getGamemode } from "../gamemodes/index.js";
+import StoreService from "./store.service.js";
+import eventService from "./event.service.js";
+import { GameEvents } from "../types/sse.js";
+import GameState from "../models/store/gamestate.model.js";
 
 export async function join(playerId: string, gamemode: GameModes) {
 	await Promise.all([
@@ -42,8 +42,8 @@ export async function matchmaking(gamemode: GameModes) {
 
 	if(!playerIds) return;
 
-	const state = new GameState(gamemode, playerIds, game.gridSize);
-	await state.save();
+	const gameState = new GameState(gamemode, playerIds, game.gridSize);
+	await gameState.save();
 
 	playerIds.forEach((playerId: string) => {
 		StoreService.key("player", playerId, "matchmaking", "gamemode").delete();
@@ -52,7 +52,7 @@ export async function matchmaking(gamemode: GameModes) {
 			to: playerId,
 			from: null,
 			event: GameEvents.MatchFound,
-			data: state.id
+			data: gameState.state.id
 		});
 	});
 }

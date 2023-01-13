@@ -1,15 +1,15 @@
-import { PublicPlayer } from "../models/response/player.response";
-import { getPlayerAccountById } from "./database.service";
-import { levelByTotal } from "./leveling.service";
+import { IPublicPlayer } from "../models/response/player.response.js";
+import { getPlayerAccountById } from "./database.service.js";
+import { levelByTotal } from "./leveling.service.js";
 
-export async function getPlayer(id: string): Promise<PublicPlayer | null> {
+export async function getPlayer(id: string): Promise<IPublicPlayer | null> {
 
 	const player = await getPlayerAccountById(id);
 
 	if (!player) return null;
 
 	return {
-		id: player._id as string,
+		id: player._id!.toString(),
 		username: player.username,
 		discriminator: player.discriminator,
 		avatar: player.avatar,

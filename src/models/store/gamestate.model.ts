@@ -1,46 +1,36 @@
-import { GameModes } from "../../gamemodes";
-import { CoordinatePair, GamePhase, IGameState, IGameStatePlayer } from "../../types/game";
+import { GameModes } from "../../gamemodes/index.js";
+import { CoordinatePair, GamePhase, IGameState, IGameStatePlayer } from "../../types/game.js";
 import uniqid from "uniqid";
-import StoreService, * as Store from "../../services/store.service";
+import StoreService, * as Store from "../../services/store.service.js";
 import { plainToInstance } from "class-transformer"
-import { createGrid } from "../../utils/grid.utils";
+import { createGrid } from "../../utils/grid.utils.js";
 
-export default class GameState implements IGameState {
-	private _id: string;
-
-	public get id() {
-		return this._id;
-	}
-
-	public gamemode: GameModes;
-	public phase: GamePhase = GamePhase.Preperation;
-
-	public createdDate: Date;
-	public startedDate?: Date;
-	public endedDate?: Date;
-
-	public playerStates: IGameStatePlayer[] = [];
-	public playersTurn = 0;
+export default class GameStateModel {
+	state: IGameState;
 
 	constructor(gamemode: GameModes, playerIds: string[], gridSize: CoordinatePair) {
-		this._id = uniqid();
-		this.gamemode = gamemode;
-
-		this.playerStates = playerIds.map((playerId) => ({
+		let playerStates: IGameStatePlayer[] = playerIds.map((playerId) => ({
 			playerId,
 			ships: [],
 			grid: createGrid(gridSize.x, gridSize.y)
 		}));
-		
-		this.createdDate = new Date();
+	
+		this.state = {
+			id: uniqid(),
+			gamemode,
+			createdDate: new Date(),
+			playerStates,
+			phase: GamePhase.Preperation,
+			playersTurn: 0
+		}
 	}
 
 	public async save() {
-		await StoreService.key("games", this.id).setValueObject(this);
+		await StoreService.key("games", this.state.id).setValueObject(this.state);
 	}
 
-	public static async load(id: string): Promise<GameState> {
+	public static async load(id: string) {
 		const state = await StoreService.key("games", id).getValueObject<IGameState>();
-		return plainToInstance(GameState, state);
+		return plainToInstance(GameStateModel, { state });
 	}
 }

@@ -14,8 +14,8 @@ export enum EOAuthProvider {
  * 
  * "out" is for Users which are returned by the database, or **out**putted Users.
  */
-export interface IPlayerAccount<io extends "in" | "out"> {
-	_id?: io extends "in" ? ObjectId : string;
+export interface IPlayerAccount {
+	_id?: ObjectId;
 	providerId: string;
 	provider: EOAuthProvider;
 	registerDate: Date;

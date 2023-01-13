@@ -1,4 +1,4 @@
-import { GameEvents } from "../types/sse";
+import { GameEvents } from "../types/sse.js";
 
 /**
  * util to format sse messages
